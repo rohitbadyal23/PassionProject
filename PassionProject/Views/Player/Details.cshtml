@@ -1,0 +1,79 @@
+﻿@model PassionProject.Models.ViewModels.ShowPlayer
+
+@{
+    ViewBag.Title = "Details";
+}
+
+<h4>Player</h4>
+
+<div style="overflow:hidden;">
+    <div style="float:left; marign-right:2%; width:49%;">
+
+        <div>@Html.ActionLink("Delete", "DeleteConfirm", new { id = Model.player.PlayerID })</div>
+        <hr />
+        <dl class="dl-horizontal">
+            <dt>
+                @Html.DisplayNameFor(model => model.player.PlayerName)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.player.PlayerName)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.player.PlayerNumber)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.player.PlayerNumber)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.player.PlayerPosition)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.player.PlayerPosition)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.player.PlayerInjuryDescription)
+            </dt>
+
+            <dd>
+                @Html.DisplayFor(model => model.player.PlayerInjuryDescription)
+            </dd>
+
+            <dt>
+                @Html.DisplayNameFor(model => model.team.TeamName)
+            </dt>
+            <dd>
+                @Html.ActionLink(Model.team.TeamName, "Details", "Team", new { id = Model.team.TeamID }, new { })
+            </dd>
+
+        </dl>
+    </div>
+    <div style="float:left;margin-right:0%; width:49%;">
+        <div>
+            <h4>Injuries:</h4>
+            <div>
+                @foreach (var injury in Model.playerinjuries)
+                {
+                    <div>
+                        @Html.ActionLink(
+                        injury.InjuryName,
+                        "Details",
+                        "Injury",
+                        new { id = injury.InjuryID },
+                        new { })
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div style="clear:both;"></div>
+</div>
+<p>
+    @Html.ActionLink("Edit", "Edit", new { id = Model.player.PlayerID }) |
+    @Html.ActionLink("Back to List", "List")
+</p>

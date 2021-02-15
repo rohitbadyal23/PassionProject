@@ -1,0 +1,35 @@
+﻿@model IEnumerable<PassionProject.Models.InjuryDto>
+
+@{
+    ViewBag.Title = "View";
+}
+
+<h2>View</h2>
+
+<p>
+    @Html.ActionLink("Create New", "Create")
+</p>
+<table class="table">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.InjuryName)
+        </th>
+        <th></th>
+    </tr>
+
+    @foreach (var item in Model)
+    {
+        <tr>
+
+            <td>
+                @Html.DisplayFor(modelItem => item.InjuryName)
+            </td>
+            <td>
+                @Html.ActionLink("Edit", "Edit", new { id = item.InjuryID }) |
+                @Html.ActionLink("Details", "Details", new { id = item.InjuryID })
+
+            </td>
+        </tr>
+    }
+
+</table>

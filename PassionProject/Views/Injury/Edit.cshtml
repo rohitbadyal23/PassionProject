@@ -1,0 +1,82 @@
+﻿@model PassionProject.Models.ViewModels.UpdateInjury
+
+@{
+    ViewBag.Title = "View";
+}
+
+<h2>Update Injury</h2>
+
+
+
+<div class="form-horizontal">
+    <div>
+        <div style="width:59%; margin-right:2%; float:left;">
+            @using (Html.BeginForm())
+            {
+                @Html.AntiForgeryToken()
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                @Html.HiddenFor(model => model.injury.InjuryID, new { Name = "InjuryID" })
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.injury.InjuryName, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.injury.InjuryName, new { htmlAttributes = new { @class = "form-control", Name = "InjuryName" } })
+                        @Html.ValidationMessageFor(model => model.injury.InjuryName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-md-offset-2 col-md-10">
+                        <input type="submit" value="Save" class="btn btn-default" />
+                    </div>
+                </div>
+            }
+        </div>
+        <div style="width:39%; margin: 0 auto; float:left;">
+            <h4>Players Injuried:</h4>
+            <div>
+                @foreach (var player in Model.injuriedplayers)
+                {
+                    <div>
+                        @Html.ActionLink(
+                        player.PlayerName,
+                        "Details",
+                        "Player",
+                        new { id = player.PlayerID },
+                        new { })
+
+                        @Html.ActionLink(
+                       "[x]",
+                       "Uninjury",
+                       "Injury",
+                       new { playerid = player.PlayerID, injuryid = Model.injury.InjuryID },
+                       new { @class = "text-danger" })
+                    </div>
+                }
+            </div>
+            <div>
+                <h3>Injuried Player:</h3>
+                <div>
+                    <form method="POST" action="/Injury/Injury">
+                        <select name="PlayerID">
+                            @foreach (var player in Model.allplayers)
+                            {
+                                <option value="@player.PlayerID">@player.PlayerName</option>
+                            }
+                        </select>
+                        <input type="number" name="InjuryID" value="@Model.injury.InjuryID" style="display:none;" />
+                        <input type="submit" value="Injuried" />
+                    </form>
+
+
+                </div>
+            </div>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+</div>
+
+
+<div>
+    @Html.ActionLink("Back to List", "List")
+</div>
