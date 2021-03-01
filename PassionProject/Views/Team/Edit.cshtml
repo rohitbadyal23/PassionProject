@@ -1,4 +1,4 @@
-﻿@model PassionProject.Models.TeamDto
+﻿@model PassionProject.Models.ViewModels.UpdateTeam
 
 @{
     ViewBag.Title = "View";
@@ -6,46 +6,65 @@
 
 <h2>Update</h2>
 
-@using (Html.BeginForm())
+@{
+    //The attribute enctype="multipart/form-data" is required
+    //if you are sending files as part of the HTTP POST request
+}
+@using (Html.BeginForm("Edit", "Team", new { id=Model.team.TeamID }, FormMethod.Post, new { enctype = "multipart/form-data" }))
 {
     @Html.AntiForgeryToken()
 
-<div class="form-horizontal">
-    <h4>Team</h4>
-    <hr />
-    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
-    @Html.HiddenFor(model => model.TeamID)
+    <div class="form-horizontal">
+        <h4>Update Team</h4>
 
-    <div class="form-group">
-        @Html.LabelFor(model => model.TeamName, htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.EditorFor(model => model.TeamName, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.TeamName, "", new { @class = "text-danger" })
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.team.TeamID, new { Name = "TeamID" })
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-group">
+                    @Html.LabelFor(model => model.team.TeamName, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.team.TeamName, new { htmlAttributes = new { @class = "form-control", Name = "TeamName" } })
+                        @Html.ValidationMessageFor(model => model.team.TeamName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.team.TeamLocation, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.team.TeamLocation, new { htmlAttributes = new { @class = "form-control", Name = "TeamLocation" } })
+                        @Html.ValidationMessageFor(model => model.team.TeamLocation, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    @Html.LabelFor(model => model.team.TeamArena, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.team.TeamArena, new { htmlAttributes = new { @class = "form-control", Name = "TeamArena" } })
+                        @Html.ValidationMessageFor(model => model.team.TeamArena, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <div class="col-md-12">Picture:</div>
+                    <div class="col-md-12">
+                        <input type="file" name="TeamPic" />
+
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <input type="submit" value="Save" class="btn btn-default" />
+            </div>
         </div>
     </div>
-    <div class="form-group">
-        @Html.LabelFor(model => model.TeamLocation, htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.EditorFor(model => model.TeamLocation, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.TeamLocation, "", new { @class = "text-danger" })
-        </div>
-    </div>
-
-    <div class="form-group">
-        @Html.LabelFor(model => model.TeamArena, htmlAttributes: new { @class = "control-label col-md-2" })
-        <div class="col-md-10">
-            @Html.EditorFor(model => model.TeamArena, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.TeamArena, "", new { @class = "text-danger" })
-        </div>
-    </div>
-
-
-    <div class="form-group">
-        <div class="col-md-offset-2 col-md-10">
-            <input type="submit" value="Save" class="btn btn-default" />
-        </div>
-    </div>
-</div>
 }
 
 <div>

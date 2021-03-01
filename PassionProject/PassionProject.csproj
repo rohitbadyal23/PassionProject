@@ -193,6 +193,14 @@
     <Compile Include="Migrations\202102120201396_playerposition.designer.cs">
       <DependentUpon>202102120201396_playerposition.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202102281821398_images.cs" />
+    <Compile Include="Migrations\202102281821398_images.designer.cs">
+      <DependentUpon>202102281821398_images.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202103011710181_PlayerImage.cs" />
+    <Compile Include="Migrations\202103011710181_PlayerImage.designer.cs">
+      <DependentUpon>202103011710181_PlayerImage.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Models\Injury.cs" />
     <Compile Include="Models\PassionDataContext.cs" />
@@ -202,6 +210,7 @@
     <Compile Include="Models\ViewModels\ShowTeam.cs" />
     <Compile Include="Models\ViewModels\UpdateInjury.cs" />
     <Compile Include="Models\ViewModels\UpdatePlayer.cs" />
+    <Compile Include="Models\ViewModels\UpdateTeam.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -210,6 +219,7 @@
     <Content Include="Content\bootstrap-theme.min.css" />
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
+    <Content Include="Content\lightbox.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
@@ -239,6 +249,7 @@
     <Content Include="Scripts\jquery-3.4.1.min.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.js" />
     <Content Include="Scripts\jquery-3.4.1.slim.min.js" />
+    <Content Include="Scripts\lightbox.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Web.config" />
     <Content Include="Web.Debug.config">
@@ -275,6 +286,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Content\Teams\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />
@@ -320,6 +332,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\202102120201396_playerposition.resx">
       <DependentUpon>202102120201396_playerposition.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202102281821398_images.resx">
+      <DependentUpon>202102281821398_images.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202103011710181_PlayerImage.resx">
+      <DependentUpon>202103011710181_PlayerImage.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

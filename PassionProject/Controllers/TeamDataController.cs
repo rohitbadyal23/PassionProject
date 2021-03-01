@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Web;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -18,7 +20,6 @@ namespace PassionProject.Controllers
         //This variable is our database access point
         private PassionDataContext db = new PassionDataContext();
 
-
         /// <summary>
         /// Gets a list or Teams in the database alongside a status code (200 OK).
         /// </summary>
@@ -27,6 +28,7 @@ namespace PassionProject.Controllers
         /// GET: api/TeamData/GetTeams
         /// </example>
         [ResponseType(typeof(IEnumerable<TeamDto>))]
+        [Route("api/teamdata/getteams")]
         public IHttpActionResult GetTeams()
         {
             List<Team> Teams = db.Teams.ToList();
@@ -40,7 +42,9 @@ namespace PassionProject.Controllers
                     TeamID = Team.TeamID,
                     TeamName = Team.TeamName,
                     TeamLocation = Team.TeamLocation,
-                    TeamArena = Team.TeamArena
+                    TeamArena = Team.TeamArena,
+                    TeamHasPic = Team.TeamHasPic,
+                    TeamPicExtension = Team.TeamPicExtension
                 };
                 TeamDtos.Add(NewTeam);
             }
@@ -79,6 +83,34 @@ namespace PassionProject.Controllers
             }
 
             return Ok(PlayerDtos);
+
+        }
+
+        
+        // Gets a list of teams and has seperate pages
+        [ResponseType(typeof(IEnumerable<TeamDto>))]
+        [Route("api/teamdata/getteamspage/{StartIndex}/{PerPage}")]
+        public IHttpActionResult GetTeamsPage(int StartIndex, int PerPage)
+        {
+            List<Team> Teams = db.Teams.OrderBy(t => t.TeamID).Skip(StartIndex).Take(PerPage).ToList();
+            List<TeamDto> TeamDtos = new List<TeamDto> { };
+
+            //Here you can choose which information is exposed to the API
+            foreach (var Team in Teams)
+            {
+                TeamDto NewTeam = new TeamDto
+                {
+                    TeamID = Team.TeamID,
+                    TeamName = Team.TeamName,
+                    TeamLocation = Team.TeamLocation,
+                    TeamArena = Team.TeamArena,
+                    TeamHasPic = Team.TeamHasPic,
+                    TeamPicExtension = Team.TeamPicExtension
+                };
+                TeamDtos.Add(NewTeam);
+            }
+
+            return Ok(TeamDtos);
         }
 
         /// <summary>
@@ -107,7 +139,9 @@ namespace PassionProject.Controllers
                 TeamID = Team.TeamID,
                 TeamName = Team.TeamName,
                 TeamLocation = Team.TeamLocation,
-                TeamArena = Team.TeamArena
+                TeamArena = Team.TeamArena,
+                TeamHasPic = Team.TeamHasPic,
+                TeamPicExtension = Team.TeamPicExtension
             };
 
 
@@ -140,6 +174,9 @@ namespace PassionProject.Controllers
             }
 
             db.Entry(Team).State = EntityState.Modified;
+            // Picture update is handled by another method
+            db.Entry(Team).Property(t => t.TeamHasPic).IsModified = false;
+            db.Entry(Team).Property(t => t.TeamPicExtension).IsModified = false;
 
             try
             {
@@ -158,6 +195,81 @@ namespace PassionProject.Controllers
             }
 
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        /// <summary>
+        /// Receives team picture data, uploads it to the webserver and updates the team's TeamHasPic option
+        /// </summary>
+        /// <param name="id">the team id</param>
+        /// <returns>status code 200 if successful.</returns>
+        /// <example>
+        /// POST: api/TeamData/UpdateTeamPic/3
+        /// HEADER: enctype=multipart/form-data
+        /// FORM-DATA: image
+        /// </example>
+        /// https://stackoverflow.com/questions/28369529/how-to-set-up-a-web-api-controller-for-multipart-form-data
+
+        [HttpPost]
+        public IHttpActionResult UpdateTeamPic(int id)
+        {
+
+            bool haspic = false;
+            string picextension;
+            if (Request.Content.IsMimeMultipartContent())
+            {
+                Debug.WriteLine("Received multipart form data.");
+
+                int numfiles = HttpContext.Current.Request.Files.Count;
+                Debug.WriteLine("Files Received: " + numfiles);
+
+                //Check if a file is posted
+                if (numfiles == 1 && HttpContext.Current.Request.Files[0] != null)
+                {
+                    var TeamPic = HttpContext.Current.Request.Files[0];
+                    //Check if the file is empty
+                    if (TeamPic.ContentLength > 0)
+                    {
+                        var valtypes = new[] { "jpeg", "jpg", "png", "gif" };
+                        var extension = Path.GetExtension(TeamPic.FileName).Substring(1);
+                        //Check the extension of the file
+                        if (valtypes.Contains(extension))
+                        {
+                            try
+                            {
+                                //file name is the id of the image
+                                string fn = id + "." + extension;
+
+                                //get a direct file path to ~/Content/Teams/{id}.{extension}
+                                string path = Path.Combine(HttpContext.Current.Server.MapPath("~/Content/Teams/"), fn);
+
+                                //save the file
+                                TeamPic.SaveAs(path);
+
+                                //if these are all successful then we can set these fields
+                                haspic = true;
+                                picextension = extension;
+
+                                //Update the team haspic and picextension fields in the database
+                                Team SelectedTeam = db.Teams.Find(id);
+                                SelectedTeam.TeamHasPic = haspic;
+                                SelectedTeam.TeamPicExtension = extension;
+                                db.Entry(SelectedTeam).State = EntityState.Modified;
+
+                                db.SaveChanges();
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine("Team Image was not saved successfully.");
+                                Debug.WriteLine("Exception:" + ex);
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            return Ok();
         }
 
         /// <summary>
@@ -200,6 +312,16 @@ namespace PassionProject.Controllers
             if (Team == null)
             {
                 return NotFound();
+            }
+            if (Team.TeamHasPic && Team.TeamPicExtension != "")
+            {
+                //also delete image from path
+                string path = HttpContext.Current.Server.MapPath("~/Content/Teams/" + id + "." + Team.TeamPicExtension);
+                if (System.IO.File.Exists(path))
+                {
+                    Debug.WriteLine("File exists... preparing to delete!");
+                    System.IO.File.Delete(path);
+                }
             }
 
             db.Teams.Remove(Team);

@@ -9,45 +9,46 @@
 <p>
     @Html.ActionLink("Create New", "Create")
 </p>
-<table class="table">
-    <tr>
-        <th>
-            @Html.DisplayNameFor(model => model.PlayerName)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.PlayerNumber)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.PlayerPosition)
-        </th>
-        <th>
-            @Html.DisplayNameFor(model => model.PlayerInjuryDescription)
-        </th>
-        <th></th>
-    </tr>
-
-    @foreach (var item in Model)
-    {
-        <tr>
-
-            <td>
-                @Html.DisplayFor(modelItem => item.PlayerName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PlayerNumber)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PlayerPosition)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.PlayerInjuryDescription)
-            </td>
-            <td>
-                @Html.ActionLink("Edit", "Edit", new { id = item.PlayerID }) |
-                @Html.ActionLink("Details", "Details", new { id = item.PlayerID })
-
-            </td>
-        </tr>
+<div class="paginate">
+    @{
+        int PrevPage = Convert.ToInt32(ViewData["PageNum"]) - 1;
+        int NextPage = Convert.ToInt32(ViewData["PageNum"]) + 1;
+        @Html.ActionLink("Prev", "List", new { PageNum = PrevPage })
+        @ViewData["PageSummary"]
+        @Html.ActionLink("Next", "List", new { PageNum = NextPage })
     }
+</div>
+<div class="record-container">
+    @foreach (var player in Model)
+    {
+        <div class="record">
+            <div class="_record">
+                @{
+                    //Use server rendering to determine an image
+                    string pic = "/Content/Players/default.jpg";
+                    string alt = "No Profile Picture Provided.";
+                    if (player.PlayerHasPic)
+                    {
+                        pic = "/Content/Players/" + player.PlayerID + "." + player.PlayerPicExtension;
+                        alt = "Profile shot of " + player.PlayerName;
+                    }
+                }
+                <nav class="linknav">
+                    <span class="editlink">@Html.ActionLink("Edit", "Edit", new { id = player.PlayerID })</span>
+                </nav>
+                <div class="imagecontainer">
+                    <a data-lightbox="player-@player.PlayerID" href="@pic" data-title="@alt">
+                        <img src="@pic" alt="@alt" />
+                    </a>
+                </div>
+                <div class="recordtitle">
+                    @Html.ActionLink(player.PlayerName,
+                   "Details",
+                   new { id = player.PlayerID })
+                </div>
 
-</table>
+
+            </div>
+        </div>
+    }
+</div>

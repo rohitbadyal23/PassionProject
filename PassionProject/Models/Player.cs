@@ -8,8 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PassionProject.Models
 {
-    //This class describes a player entity.
-    //It is used for actually generating a database table
+    
     public class Player
     {
         [Key]
@@ -23,6 +22,9 @@ namespace PassionProject.Models
 
         public string PlayerInjuryDescription { get; set; }
 
+        public bool PlayerHasPic { get; set; }
+        public string PlayerPicExtension { get; set; }
+
         //A player plays for one team
         [ForeignKey("Team")]
         public int TeamID { get; set; }
@@ -32,10 +34,7 @@ namespace PassionProject.Models
         public ICollection<Injury> Injuries { get; set; }
     }
 
-    //This class can be used to transfet information about a player.
-    //Known as a "Data Transfer Object"
-    //You can think of this class as the 'Model' that was used in 5101.
-    //It is simply a vessel of communication
+    
     public class PlayerDto
     {
         public int PlayerID { get; set; }
@@ -51,6 +50,9 @@ namespace PassionProject.Models
 
         [DisplayName("Player Injury Description")]
         public string PlayerInjuryDescription { get; set; }
+
+        public bool PlayerHasPic { get; set; }
+        public string PlayerPicExtension { get; set; }
 
         public int TeamID { get; set; }
     }

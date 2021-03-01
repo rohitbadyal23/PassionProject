@@ -18,6 +18,11 @@ namespace PassionProject.Models
 
         public string TeamArena { get; set; }
 
+        public bool TeamHasPic { get; set; }
+
+        //For when the team has an image, recorded the extension (.png, .gif, .jpg, etc.)
+        public string TeamPicExtension { get; set; }
+
         //A team can have many players
         public ICollection<Player> Players { get; set; }
     }
@@ -34,5 +39,9 @@ namespace PassionProject.Models
 
         [DisplayName("Team Arena")]
         public string TeamArena { get; set; }
+
+        public bool TeamHasPic { get; set; }
+
+        public string TeamPicExtension { get; set; }
     }
 }

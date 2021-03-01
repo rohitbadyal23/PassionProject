@@ -1,4 +1,4 @@
-﻿@model PassionProject.Models.PlayerDto
+﻿@model PassionProject.Models.ViewModels.UpdatePlayer
 
 @{
     ViewBag.Title = "View";
@@ -17,43 +17,48 @@
     <h4>Player</h4>
     <hr />
     @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
     <div class="form-group">
-        @Html.LabelFor(model => model.PlayerName, htmlAttributes: new { @class = "control-label col-md-2" })
+        @Html.LabelFor(model => model.player.PlayerName, htmlAttributes: new { @class = "control-label col-md-2" })
         <div class="col-md-10">
-            @Html.EditorFor(model => model.PlayerName, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.PlayerName, "", new { @class = "text-danger" })
+            @Html.EditorFor(model => model.player.PlayerName, new { htmlAttributes = new { @class = "form-control", Name = "PlayerName" } })
+            @Html.ValidationMessageFor(model => model.player.PlayerName, "", new { @class = "text-danger" })
         </div>
     </div>
 
     <div class="form-group">
-        @Html.LabelFor(model => model.PlayerNumber, htmlAttributes: new { @class = "control-label col-md-2" })
+        @Html.LabelFor(model => model.player.PlayerNumber, htmlAttributes: new { @class = "control-label col-md-2" })
         <div class="col-md-10">
-            @Html.EditorFor(model => model.PlayerNumber, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.PlayerNumber, "", new { @class = "text-danger" })
+            @Html.EditorFor(model => model.player.PlayerNumber, new { htmlAttributes = new { @class = "form-control", Name = "PlayerNumber" } })
+            @Html.ValidationMessageFor(model => model.player.PlayerNumber, "", new { @class = "text-danger" })
         </div>
     </div>
 
     <div class="form-group">
-        @Html.LabelFor(model => model.PlayerPosition, htmlAttributes: new { @class = "control-label col-md-2" })
+        @Html.LabelFor(model => model.player.PlayerPosition, htmlAttributes: new { @class = "control-label col-md-2" })
         <div class="col-md-10">
-            @Html.EditorFor(model => model.PlayerPosition, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.PlayerPosition, "", new { @class = "text-danger" })
+            @Html.EditorFor(model => model.player.PlayerPosition, new { htmlAttributes = new { @class = "form-control", Name = "PlayerPosition" } })
+            @Html.ValidationMessageFor(model => model.player.PlayerPosition, "", new { @class = "text-danger" })
         </div>
     </div>
 
     <div class="form-group">
-        @Html.LabelFor(model => model.PlayerInjuryDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+        @Html.LabelFor(model => model.player.PlayerInjuryDescription, htmlAttributes: new { @class = "control-label col-md-2" })
         <div class="col-md-10">
-            @Html.EditorFor(model => model.PlayerInjuryDescription, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.PlayerInjuryDescription, "", new { @class = "text-danger" })
+            @Html.EditorFor(model => model.player.PlayerInjuryDescription, new { htmlAttributes = new { @class = "form-control", Name = "PlayerInjuryDescription" } })
+            @Html.ValidationMessageFor(model => model.player.PlayerInjuryDescription, "", new { @class = "text-danger" })
         </div>
     </div>
 
     <div class="form-group">
-        @Html.LabelFor(model => model.TeamID, htmlAttributes: new { @class = "control-label col-md-2" })
+        @Html.LabelFor(model => model.player.TeamID, htmlAttributes: new { @class = "control-label col-md-2" })
         <div class="col-md-10">
-            @Html.EditorFor(model => model.TeamID, new { htmlAttributes = new { @class = "form-control" } })
-            @Html.ValidationMessageFor(model => model.TeamID, "", new { @class = "text-danger" })
+            <select name="TeamID">
+                @foreach (var team in Model.allteams)
+                {
+                    <option value="@team.TeamID">@team.TeamName</option>
+                }
+            </select>
         </div>
     </div>
 
@@ -66,5 +71,5 @@
 }
 
 <div>
-    @Html.ActionLink("Back to List", "Index")
+    @Html.ActionLink("Back to List", "List")
 </div>

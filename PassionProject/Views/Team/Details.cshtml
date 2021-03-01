@@ -4,58 +4,68 @@
     ViewBag.Title = "Details";
 }
 
-<h4>@Model.team.TeamName</h4>
-<div style="overflow:hidden;">
-    <div style="float:left; marign-right:2%; width:49%;">
-
-        <div>@Html.ActionLink("Delete", "DeleteConfirm", new { id = Model.team.TeamID })</div>
-
-        <dl class="dl-horizontal">
-            <dt>
-                @Html.DisplayNameFor(model => model.team.TeamName)
-            </dt>
-
-            <dd>
-                @Html.DisplayFor(model => model.team.TeamName)
-            </dd>
-
-            <dt>
-                @Html.DisplayNameFor(model => model.team.TeamLocation)
-            </dt>
-
-            <dd>
-                @Html.DisplayFor(model => model.team.TeamLocation)
-            </dd>
-
-            <dt>
-                @Html.DisplayNameFor(model => model.team.TeamArena)
-            </dt>
-
-            <dd>
-                @Html.DisplayFor(model => model.team.TeamArena)
-            </dd>
-
-        </dl>
+<h4>Team</h4>
+<div>
+    <div>@Html.ActionLink("Delete", "DeleteConfirm", new { id = Model.team.TeamID })</div>
+    <hr />
+    @{
+        //Use server rendering to determine an image
+        string pic = "/Content/Teams/default.jpg";
+        string alt = "No Profile Picture Provided.";
+        if (Model.team.TeamHasPic)
+        {
+            pic = "/Content/Teams/" + Model.team.TeamID + "." + Model.team.TeamPicExtension;
+            alt = "Profile shot of " + Model.team.TeamName;
+        }
+    }
+    <div class="imagecontainer featured">
+        <img src="@pic" alt="@alt" />
     </div>
-    <div style="float:left;margin-right:0%; width:49%;">
-        <div>
-            <h4>Players:</h4>
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.team.TeamName)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.team.TeamName)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.team.TeamLocation)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.team.TeamLocation)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.team.TeamArena)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.team.TeamArena)
+        </dd>
+
+        <div style="float:left;margin-right:0%; width:49%;">
             <div>
-                @foreach (var player in Model.teamplayers)
-                {
-                    <div>
-                        @Html.ActionLink(
-                        player.PlayerName,
-                        "Details",
-                        "Player",
-                        new { id = player.PlayerID },
-                        new { })
-                    </div>
-                }
+                <h4>Players:</h4>
+                <div>
+                    @foreach (var player in Model.teamplayers)
+                    {
+                        <div>
+                            @Html.ActionLink(
+                            player.PlayerName,
+                            "Details",
+                            "Player",
+                            new { id = player.PlayerID },
+                            new { })
+                        </div>
+                    }
+                </div>
             </div>
         </div>
-    </div>
-    <div style="clear:both;"></div>
+
+    </dl>
 </div>
 <p>
     @Html.ActionLink("Edit", "Edit", new { id = Model.team.TeamID }) |

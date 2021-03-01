@@ -25,26 +25,71 @@ namespace PassionProject.Controllers
                 AllowAutoRedirect = false
             };
             client = new HttpClient(handler);
-            //change this to match your own local port number
             client.BaseAddress = new Uri("https://localhost:44375/api/");
             client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
         }
 
-        // GET: Player/List
-        public ActionResult List()
+        // GET: Player/List?{PageNum}
+        // If the page number is not included, set it to 0
+        public ActionResult List(int PageNum = 0)
         {
+            // Grab all players
             string url = "playerdata/getplayers";
+            // Send off an HTTP request
+            // GET : /api/playerdata/getplayers
+            // Retrieve response
             HttpResponseMessage response = client.GetAsync(url).Result;
+            // If the response is a success, proceed
             if (response.IsSuccessStatusCode)
             {
+                // Fetch the response content into IEnumerable<PlayerDto>
                 IEnumerable<PlayerDto> SelectedPlayers = response.Content.ReadAsAsync<IEnumerable<PlayerDto>>().Result;
-                return View(SelectedPlayers);
+
+                // -- Start of Pagination Algorithm --
+
+                // Find the total number of players
+                int PlayerCount = SelectedPlayers.Count();
+                // Number of players to display per page
+                int PerPage = 16;
+                // Determines the maximum number of pages (rounded up), assuming a page 0 start.
+                int MaxPage = (int)Math.Ceiling((decimal)PlayerCount / PerPage) - 1;
+
+                // Lower boundary for Max Page
+                if (MaxPage < 0) MaxPage = 0;
+                // Lower boundary for Page Number
+                if (PageNum < 0) PageNum = 0;
+                // Upper Bound for Page Number
+                if (PageNum > MaxPage) PageNum = MaxPage;
+
+                // The Record Index of our Page Start
+                int StartIndex = PerPage * PageNum;
+
+                //Helps us generate the HTML which shows "Page 1 of ..." on the list view
+                ViewData["PageNum"] = PageNum;
+                ViewData["PageSummary"] = " " + (PageNum + 1) + " of " + (MaxPage + 1) + " ";
+
+                // -- End of Pagination Algorithm --
+
+
+                // Send back another request to get players, this time according to our paginated logic rules
+                // GET api/playerdata/getplayerspage/{startindex}/{perpage}
+                url = "playerdata/getplayerspage/" + StartIndex + "/" + PerPage;
+                response = client.GetAsync(url).Result;
+
+                // Retrieve the response of the HTTP Request
+                IEnumerable<PlayerDto> SelectedPlayersPage = response.Content.ReadAsAsync<IEnumerable<PlayerDto>>().Result;
+
+                return View(SelectedPlayersPage);
+
             }
             else
             {
+                // If we reach here something went wrong with our list algorithm
                 return RedirectToAction("Error");
             }
+
+
         }
 
         // GET: Player/Details/5
@@ -69,8 +114,6 @@ namespace PassionProject.Controllers
 
                 url = "playerdata/getinjuriesforplayer/" + id;
                 response = client.GetAsync(url).Result;
-                //Can catch the status code (200 OK, 301 REDIRECT), etc.
-                //Debug.WriteLine(response.StatusCode);
                 IEnumerable<InjuryDto> SelectedInjuries = response.Content.ReadAsAsync<IEnumerable<InjuryDto>>().Result;
                 ViewModel.playerinjuries = SelectedInjuries;
 
@@ -85,7 +128,14 @@ namespace PassionProject.Controllers
         // GET: Player/Create
         public ActionResult Create()
         {
-            return View();
+            UpdatePlayer ViewModel = new UpdatePlayer();
+            //get information about teams this player COULD play for.
+            string url = "teamdata/getteams";
+            HttpResponseMessage response = client.GetAsync(url).Result;
+            IEnumerable<TeamDto> PotentialTeams = response.Content.ReadAsAsync<IEnumerable<TeamDto>>().Result;
+            ViewModel.allteams = PotentialTeams;
+
+            return View(ViewModel);
         }
 
         // POST: Player/Create
@@ -121,8 +171,6 @@ namespace PassionProject.Controllers
 
             string url = "playerdata/findplayer/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into player data transfer object
@@ -146,7 +194,7 @@ namespace PassionProject.Controllers
         // POST: Player/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken()]
-        public ActionResult Edit(int id, Player PlayerInfo)
+        public ActionResult Edit(int id, Player PlayerInfo, HttpPostedFileBase PlayerPic)
         {
             Debug.WriteLine(PlayerInfo.PlayerName);
             string url = "playerdata/updateplayer/" + id;
@@ -157,6 +205,20 @@ namespace PassionProject.Controllers
             Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
+
+                //only attempt to send player picture data if we have it
+                if (PlayerPic != null)
+                {
+                    Debug.WriteLine("Calling Update Image method.");
+                    //Send over image data for player
+                    url = "playerdata/updateplayerpic/" + id;
+                    //Debug.WriteLine("Received player picture "+PlayerPic.FileName);
+
+                    MultipartFormDataContent requestcontent = new MultipartFormDataContent();
+                    HttpContent imagecontent = new StreamContent(PlayerPic.InputStream);
+                    requestcontent.Add(imagecontent, "PlayerPic", PlayerPic.FileName);
+                    response = client.PostAsync(url, requestcontent).Result;
+                }
 
                 return RedirectToAction("Details", new { id = id });
             }
@@ -172,8 +234,6 @@ namespace PassionProject.Controllers
         {
             string url = "playerdata/findplayer/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into player data transfer object
@@ -195,8 +255,6 @@ namespace PassionProject.Controllers
             //post body is empty
             HttpContent content = new StringContent("");
             HttpResponseMessage response = client.PostAsync(url, content).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
 

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Web;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.Entity;
@@ -26,6 +28,7 @@ namespace PassionProject.Controllers
         /// GET: api/PlayerData/GetPlayers
         /// </example>
         [ResponseType(typeof(IEnumerable<PlayerDto>))]
+        [Route("api/playerdata/getplayers")]
         public IHttpActionResult GetPlayers()
         {
             List<Player> Players = db.Players.ToList();
@@ -41,6 +44,49 @@ namespace PassionProject.Controllers
                     PlayerNumber = Player.PlayerNumber,
                     PlayerPosition = Player.PlayerPosition,
                     PlayerInjuryDescription = Player.PlayerInjuryDescription,
+                    PlayerHasPic = Player.PlayerHasPic,
+                    PlayerPicExtension = Player.PlayerPicExtension,
+                    TeamID = Player.TeamID
+                };
+                PlayerDtos.Add(NewPlayer);
+            }
+
+            return Ok(PlayerDtos);
+        }
+
+        /// <summary>
+        /// Gets a list or players in the database alongside a status code (200 OK). Skips the first {startindex} records and takes {perpage} records.
+        /// </summary>
+        /// <returns>A list of players including their ID, bio, first name, last name, and teamid.</returns>
+        /// <param name="StartIndex">The number of records to skip through</param>
+        /// <param name="PerPage">The number of records for each page</param>
+        /// <example>
+        /// GET: api/PlayerData/GetPlayers/20/5
+        /// Retrieves the first 5 players after skipping 20 (fifth page)
+        /// 
+        /// GET: api/PlayerData/GetPlayers/15/3
+        /// Retrieves the first 3 players after skipping 15 (sixth page)
+        /// 
+        /// </example>
+        [ResponseType(typeof(IEnumerable<PlayerDto>))]
+        [Route("api/playerdata/getplayerspage/{StartIndex}/{PerPage}")]
+        public IHttpActionResult GetPlayersPage(int StartIndex, int PerPage)
+        {
+            List<Player> Players = db.Players.OrderBy(p => p.PlayerID).Skip(StartIndex).Take(PerPage).ToList();
+            List<PlayerDto> PlayerDtos = new List<PlayerDto> { };
+
+            //Here you can choose which information is exposed to the API
+            foreach (var Player in Players)
+            {
+                PlayerDto NewPlayer = new PlayerDto
+                {
+                    PlayerID = Player.PlayerID,
+                    PlayerName = Player.PlayerName,
+                    PlayerNumber = Player.PlayerNumber,
+                    PlayerPosition = Player.PlayerPosition,
+                    PlayerInjuryDescription = Player.PlayerInjuryDescription,
+                    PlayerHasPic = Player.PlayerHasPic,
+                    PlayerPicExtension = Player.PlayerPicExtension,
                     TeamID = Player.TeamID
                 };
                 PlayerDtos.Add(NewPlayer);
@@ -77,6 +123,8 @@ namespace PassionProject.Controllers
                 PlayerNumber = Player.PlayerNumber,
                 PlayerPosition = Player.PlayerPosition,
                 PlayerInjuryDescription = Player.PlayerInjuryDescription,
+                PlayerHasPic = Player.PlayerHasPic,
+                PlayerPicExtension = Player.PlayerPicExtension,
                 TeamID = Player.TeamID
             };
 
@@ -177,6 +225,9 @@ namespace PassionProject.Controllers
             }
 
             db.Entry(player).State = EntityState.Modified;
+            // Picture update is handled by another method
+            db.Entry(player).Property(p => p.PlayerHasPic).IsModified = false;
+            db.Entry(player).Property(p => p.PlayerPicExtension).IsModified = false;
 
             try
             {
@@ -196,6 +247,82 @@ namespace PassionProject.Controllers
             }
 
             return StatusCode(HttpStatusCode.NoContent);
+        }
+
+        /// <summary>
+        /// Receives player picture data, uploads it to the webserver and updates the player's HasPic option
+        /// </summary>
+        /// <param name="id">the player id</param>
+        /// <returns>status code 200 if successful.</returns>
+        /// <example>
+        /// curl -F playerpic=@file.jpg "https://localhost:xx/api/playerdata/updateplayerpic/2"
+        /// POST: api/PlayerData/UpdatePlayerPic/3
+        /// HEADER: enctype=multipart/form-data
+        /// FORM-DATA: image
+        /// </example>
+        /// https://stackoverflow.com/questions/28369529/how-to-set-up-a-web-api-controller-for-multipart-form-data
+
+        [HttpPost]
+        public IHttpActionResult UpdatePlayerPic(int id)
+        {
+
+            bool haspic = false;
+            string picextension;
+            if (Request.Content.IsMimeMultipartContent())
+            {
+                Debug.WriteLine("Received multipart form data.");
+
+                int numfiles = HttpContext.Current.Request.Files.Count;
+                Debug.WriteLine("Files Received: " + numfiles);
+
+                //Check if a file is posted
+                if (numfiles == 1 && HttpContext.Current.Request.Files[0] != null)
+                {
+                    var PlayerPic = HttpContext.Current.Request.Files[0];
+                    //Check if the file is empty
+                    if (PlayerPic.ContentLength > 0)
+                    {
+                        var valtypes = new[] { "jpeg", "jpg", "png", "gif" };
+                        var extension = Path.GetExtension(PlayerPic.FileName).Substring(1);
+                        //Check the extension of the file
+                        if (valtypes.Contains(extension))
+                        {
+                            try
+                            {
+                                //file name is the id of the image
+                                string fn = id + "." + extension;
+
+                                //get a direct file path to ~/Content/Players/{id}.{extension}
+                                string path = Path.Combine(HttpContext.Current.Server.MapPath("~/Content/Players/"), fn);
+
+                                //save the file
+                                PlayerPic.SaveAs(path);
+
+                                //if these are all successful then we can set these fields
+                                haspic = true;
+                                picextension = extension;
+
+                                //Update the player haspic and picextension fields in the database
+                                Player SelectedPlayer = db.Players.Find(id);
+                                SelectedPlayer.PlayerHasPic = haspic;
+                                SelectedPlayer.PlayerPicExtension = extension;
+                                db.Entry(SelectedPlayer).State = EntityState.Modified;
+
+                                db.SaveChanges();
+
+                            }
+                            catch (Exception ex)
+                            {
+                                Debug.WriteLine("Player Image was not saved successfully.");
+                                Debug.WriteLine("Exception:" + ex);
+                            }
+                        }
+                    }
+
+                }
+            }
+
+            return Ok();
         }
 
 
@@ -239,6 +366,16 @@ namespace PassionProject.Controllers
             if (player == null)
             {
                 return NotFound();
+            }
+            if (player.PlayerHasPic && player.PlayerPicExtension != "")
+            {
+                //also delete image from path
+                string path = HttpContext.Current.Server.MapPath("~/Content/Players/" + id + "." + player.PlayerPicExtension);
+                if (System.IO.File.Exists(path))
+                {
+                    Debug.WriteLine("File exists... preparing to delete!");
+                    System.IO.File.Delete(path);
+                }
             }
 
             db.Players.Remove(player);

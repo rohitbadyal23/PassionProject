@@ -8,8 +8,7 @@ namespace PassionProject.Models
 {
     public class PassionDataContext : DbContext
     {
-        //Connection string properties can be defined within base()
-        //If left empty, a database will be automatically created
+        //Connection to Database
         public PassionDataContext() : base("name=PassionDataContext")
         {
 
@@ -25,17 +24,5 @@ namespace PassionProject.Models
         public DbSet<Team> Teams { get; set; }
         public DbSet<Injury> Injuries { get; set; }
 
-        //Tools > NuGet Package Manager > Package Manager Console
-        //enable-migrations (only once)
-        //add-migration {migration name}
-        //update-database
-
-        //To View the Database Changes sequentially, go to Project/Migrations folder
-
-        //To View Database itself, go to View > SQL Server Object Explorer
-        // (localdb)\MSSQLLocalDB
-        // Right Click {ProjectName}.Models.DataContext > Tables
-        // Can Right Click Tables to View Data
-        // Can Right Click Database to Query
     }
 }

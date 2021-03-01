@@ -25,7 +25,6 @@ namespace PassionProject.Controllers
                 AllowAutoRedirect = false
             };
             client = new HttpClient(handler);
-            //change this to match your own local port number
             client.BaseAddress = new Uri("https://localhost:44375/api/");
             client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
@@ -56,8 +55,6 @@ namespace PassionProject.Controllers
 
             string url = "injurydata/findinjury/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Injury data transfer object
@@ -121,8 +118,6 @@ namespace PassionProject.Controllers
 
             string url = "injurydata/findinjury/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Injury data transfer object
@@ -162,8 +157,6 @@ namespace PassionProject.Controllers
         {
             string url = "injurydata/uninjury/" + playerid + "/" + injuryid;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Edit", new { id = injuryid });
@@ -184,8 +177,6 @@ namespace PassionProject.Controllers
         {
             string url = "injurydata/injury/" + playerid + "/" + injuryid;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 return RedirectToAction("Edit", new { id = injuryid });
@@ -227,8 +218,6 @@ namespace PassionProject.Controllers
         {
             string url = "injurydata/findinjury/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Injury data transfer object
@@ -250,8 +239,6 @@ namespace PassionProject.Controllers
             //post body is empty
             HttpContent content = new StringContent("");
             HttpResponseMessage response = client.PostAsync(url, content).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
 

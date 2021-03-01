@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.IO;
 using PassionProject.Models;
 using PassionProject.Models.ViewModels;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Diagnostics;
 using System.Web.Script.Serialization;
-
 
 namespace PassionProject.Controllers
 {
@@ -25,8 +25,13 @@ namespace PassionProject.Controllers
             {
                 AllowAutoRedirect = false
             };
+
+           // HttpClientHandler handler = new HttpClientHandler()
+           // {
+           //     Proxy = HttpWebRequest.GetSystemWebProxy()
+           // };
+
             client = new HttpClient(handler);
-            //change this to match your own local port number
             client.BaseAddress = new Uri("https://localhost:44375/api/");
             client.DefaultRequestHeaders.Accept.Add(
             new MediaTypeWithQualityHeaderValue("application/json"));
@@ -34,15 +39,53 @@ namespace PassionProject.Controllers
         }
 
 
-        // GET: Team/List
-        public ActionResult List()
-        {
+        // GET: Team/List?{PageNum}
+        //Page number set to 0 if the page number is not included
+        public ActionResult List(int PageNum=0)
+        {   
+            //Gets all the teams
             string url = "teamdata/getteams";
             HttpResponseMessage response = client.GetAsync(url).Result;
             if (response.IsSuccessStatusCode)
             {
+                
                 IEnumerable<TeamDto> SelectedTeams = response.Content.ReadAsAsync<IEnumerable<TeamDto>>().Result;
-                return View(SelectedTeams);
+                // -- Start of Pagination Algorithm --
+
+                // Find the total number of team
+                int TeamCount = SelectedTeams.Count();
+                // Number of players to display per page
+                int PerPage = 8;
+                // Determines the maximum number of pages (rounded up), assuming a page 0 start.
+                int MaxPage = (int)Math.Ceiling((decimal)TeamCount / PerPage) - 1;
+
+                // Lower boundary for Max Page
+                if (MaxPage < 0) MaxPage = 0;
+                // Lower boundary for Page Number
+                if (PageNum < 0) PageNum = 0;
+                // Upper Bound for Page Number
+                if (PageNum > MaxPage) PageNum = MaxPage;
+
+                // The Record Index of our Page Star
+                int StartIndex = PerPage * PageNum;
+
+                //Helps us generate the HTML which shows "Page 1 of ..." on the list view
+                ViewData["PageNum"] = PageNum;
+                ViewData["PageSummary"] = " " + (PageNum + 1) + " of " + (MaxPage + 1) + " ";
+
+                // -- End of Pagination Algorithm --
+
+
+                // Send back another request to get teams, this time according to our paginated logic rules
+                // GET api/teamdata/getteamspage/{startindex}/{perpage}
+                url = "teamdata/getteamspage/" + StartIndex + "/" + PerPage;
+                response = client.GetAsync(url).Result;
+
+                // Retrieve the response of the HTTP Request
+                IEnumerable<TeamDto> SelectedTeamsPage = response.Content.ReadAsAsync<IEnumerable<TeamDto>>().Result;
+
+                //Return the paginated of teamss instead of the entire list
+                return View(SelectedTeamsPage);
             }
             else
             {
@@ -56,20 +99,14 @@ namespace PassionProject.Controllers
             ShowTeam ViewModel = new ShowTeam();
             string url = "teamdata/findteam/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Team data transfer object
                 TeamDto SelectedTeam = response.Content.ReadAsAsync<TeamDto>().Result;
                 ViewModel.team = SelectedTeam;
 
-                //We don't need to throw any errors if this is null
-                //A team not having any players is not an issue.
                 url = "teamdata/getplayersforteam/" + id;
                 response = client.GetAsync(url).Result;
-                //Can catch the status code (200 OK, 301 REDIRECT), etc.
-                //Debug.WriteLine(response.StatusCode);
                 IEnumerable<PlayerDto> SelectedPlayers = response.Content.ReadAsAsync<IEnumerable<PlayerDto>>().Result;
                 ViewModel.teamplayers = SelectedPlayers;
 
@@ -84,7 +121,14 @@ namespace PassionProject.Controllers
         // GET: Team/Create
         public ActionResult Create()
         {
-            return View();
+            UpdateTeam ViewModel = new UpdateTeam();
+            //get information about players that could play for this team.
+            string url = "playerdata/getplayers";
+            HttpResponseMessage response = client.GetAsync(url).Result;
+            IEnumerable<PlayerDto> PotentialPlayers = response.Content.ReadAsAsync<IEnumerable<PlayerDto>>().Result;
+            ViewModel.allplayers = PotentialPlayers;
+
+            return View(ViewModel);
         }
 
         // POST: Team/Create
@@ -116,15 +160,22 @@ namespace PassionProject.Controllers
         // GET: Team/Edit/5
         public ActionResult Edit(int id)
         {
+            UpdateTeam ViewModel = new UpdateTeam();
             string url = "teamdata/findteam/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Team data transfer object
                 TeamDto SelectedTeam = response.Content.ReadAsAsync<TeamDto>().Result;
-                return View(SelectedTeam);
+                ViewModel.team = SelectedTeam;
+
+                //get information about players that could play for this team.
+                url = "playerdata/getplayers";
+                response = client.GetAsync(url).Result;
+                IEnumerable<PlayerDto> PotentialPlayers = response.Content.ReadAsAsync<IEnumerable<PlayerDto>>().Result;
+                ViewModel.allplayers = PotentialPlayers;
+
+                return View(ViewModel);
             }
             else
             {
@@ -135,9 +186,8 @@ namespace PassionProject.Controllers
         // POST: Team/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken()]
-        public ActionResult Edit(int id, Team TeamInfo)
+        public ActionResult Edit(int id, Team TeamInfo, HttpPostedFileBase TeamPic)
         {
-            Debug.WriteLine(TeamInfo.TeamName);
             string url = "teamdata/updateteam/" + id;
             Debug.WriteLine(jss.Serialize(TeamInfo));
             HttpContent content = new StringContent(jss.Serialize(TeamInfo));
@@ -146,6 +196,19 @@ namespace PassionProject.Controllers
 
             if (response.IsSuccessStatusCode)
             {
+                //only attempt to send player picture data if we have it
+                if (TeamPic != null)
+                {
+                    Debug.WriteLine("Calling Update Image method.");
+                    //Send over image data for team
+                    url = "teamdata/updateteampic/" + id;
+
+                    MultipartFormDataContent requestcontent = new MultipartFormDataContent();
+                    HttpContent imagecontent = new StreamContent(TeamPic.InputStream);
+                    requestcontent.Add(imagecontent, "TeamPic", TeamPic.FileName);
+                    response = client.PostAsync(url, requestcontent).Result;
+                }
+
                 return RedirectToAction("Details", new { id = id });
             }
             else
@@ -160,8 +223,6 @@ namespace PassionProject.Controllers
         {
             string url = "teamdata/findteam/" + id;
             HttpResponseMessage response = client.GetAsync(url).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
                 //Put data into Team data transfer object
@@ -183,8 +244,6 @@ namespace PassionProject.Controllers
             //post body is empty
             HttpContent content = new StringContent("");
             HttpResponseMessage response = client.PostAsync(url, content).Result;
-            //Can catch the status code (200 OK, 301 REDIRECT), etc.
-            //Debug.WriteLine(response.StatusCode);
             if (response.IsSuccessStatusCode)
             {
 

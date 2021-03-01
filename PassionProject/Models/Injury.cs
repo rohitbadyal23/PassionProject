@@ -14,7 +14,7 @@ namespace PassionProject.Models
 
         public string InjuryName { get; set; }
 
-        //Utilizes the inverse property to specify the "Many"
+       
         //One Injury Many Players
         public ICollection<Player> Players { get; set; }
     }
