@@ -1,4 +1,4 @@
-Passion Project Final Version </br>
+<strong>Passion Project Final Version </strong></br>
 NBA Injury App </br>
 I made an injury application for the NBA, you can track what players have what injury and it descriped the injury and how long they can be out for. </br>
 The database consist of three tables: Teams, Players and Injuries </br>
